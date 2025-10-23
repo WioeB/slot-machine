@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Slot Machine</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PREMIUM SLOTS</h1>
+            <p class="subtitle">CASINO EDITION</p>
+        </div>
+        
+        <div class="balance-section">
+            <div class="balance-card">
+                <span class="balance-label">CURRENT BALANCE</span>
+                <span class="balance-amount">$<span id="balance">{{ balance }}</span></span>
+            </div>
+            <form method="POST" action="/add_funds" style="display: inline;">
+                <button type="submit" class="add-funds-btn">+ ADD $1</button>
+            </form>
+        </div>
+
+        <div class="slot-machine">
+            <div class="slot-display">
+                <div class="slots" id="slots">
+                    {% if resultado %}
+                        {% for symbol in resultado %}
+                            <div class="slot">{{ symbol }}</div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="slot spinning">🎰</div>
+                        <div class="slot spinning">🎰</div>
+                        <div class="slot spinning">🎰</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if message %}
+            <div class="result-message {% if 'won' in message.lower() %}win{% else %}lose{% endif %}">
+                <span class="result-icon">{% if 'won' in message.lower() %}✓{% else %}✗{% endif %}</span>
+                <span class="result-text">{{ message }}</span>
+            </div>
+        {% endif %}
+
+        <form method="POST" class="bet-form" id="betForm">
+            <div class="bet-controls">
+                <div class="bet-input-wrapper">
+                    <label for="bet">BET AMOUNT</label>
+                    <div class="input-container">
+                        <span class="currency-symbol">$</span>
+                        <input type="number" id="bet" name="bet" min="1" max="{{ balance }}" value="10" required>
+                    </div>
+                </div>
+                <button type="submit" class="spin-button" id="spinButton">
+                    <span class="button-text">SPIN</span>
+                    <span class="button-icon">▶</span>
+                </button>
+            </div>
+        </form>
+
+        <div class="game-info">
+            <div class="info-item">
+                <span class="info-label">WIN MULTIPLIER</span>
+                <span class="info-value">3x</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">STARTING BALANCE</span>
+                <span class="info-value">$100</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">MATCH REQUIRED</span>
+                <span class="info-value">3 SYMBOLS</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="moneyRain" class="money-rain"></div>
+    <div id="winOverlay" class="win-overlay">
+        <div class="win-content">
+            <div class="win-multiplier">×10</div>
+            <div class="win-text">JACKPOT!</div>
+            <div class="win-amount"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('betForm');
+        const spinButton = document.getElementById('spinButton');
+        const slots = document.querySelectorAll('.slot');
+        const moneyRain = document.getElementById('moneyRain');
+        const winOverlay = document.getElementById('winOverlay');
+
+        // Detectar si ganó
+        const isWin = "{{ message }}".toLowerCase().includes('won');
+        const betAmount = parseInt("{{ request.form.get('bet', 0) }}") || 0;
+
+        if (isWin && betAmount > 0) {
+            setTimeout(() => {
+                triggerWinCelebration(betAmount * 3);
+            }, 500);
+        }
+
+        form.addEventListener('submit', function(e) {
+            spinButton.disabled = true;
+            spinButton.style.opacity = '0.6';
+            
+            // Animación ultra rápida de spinning
+            slots.forEach((slot, index) => {
+                slot.classList.add('ultra-spinning');
+                setTimeout(() => {
+                    slot.classList.remove('ultra-spinning');
+                }, 300 + (index * 100));
+            });
+
+            setTimeout(() => {
+                spinButton.disabled = false;
+                spinButton.style.opacity = '1';
+            }, 800);
+        });
+
+        function triggerWinCelebration(winAmount) {
+            // Mostrar overlay épico
+            const winAmountEl = winOverlay.querySelector('.win-amount');
+            winAmountEl.textContent = `+${winAmount}`;
+            winOverlay.classList.add('active');
+
+            // Crear lluvia de dinero masiva
+            createMoneyRain();
+
+            // Ocultar overlay después de 4 segundos
+            setTimeout(() => {
+                winOverlay.classList.remove('active');
+            }, 4000);
+
+            // Detener lluvia después de 6 segundos
+            setTimeout(() => {
+                moneyRain.innerHTML = '';
+            }, 6000);
+        }
+
+        function createMoneyRain() {
+            const moneySymbols = ['💵', '💴', '💶', '💷', '💰', '🪙', '💸'];
+            const rainCount = 80; // Cantidad masiva de dinero
+
+            for (let i = 0; i < rainCount; i++) {
+                setTimeout(() => {
+                    const money = document.createElement('div');
+                    money.className = 'money-item';
+                    money.textContent = moneySymbols[Math.floor(Math.random() * moneySymbols.length)];
+                    money.style.left = Math.random() * 100 + '%';
+                    money.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    money.style.animationDelay = '0s';
+                    money.style.fontSize = (Math.random() * 30 + 30) + 'px';
+                    
+                    // Rotación aleatoria
+                    const rotation = Math.random() * 360;
+                    money.style.setProperty('--rotation', rotation + 'deg');
+                    
+                    moneyRain.appendChild(money);
+
+                    // Eliminar después de la animación
+                    setTimeout(() => {
+                        money.remove();
+                    }, 4000);
+                }, i * 50); // Intervalo para que caigan progresivamente
+            }
+        }
+    </script>
+</body>
+</html>
