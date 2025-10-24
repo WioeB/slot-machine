@@ -4,7 +4,8 @@ import random
 app = Flask(__name__)
 
 balance = 100
-symbols = ["🍓", "🍋", "🥝", "🍒", "🍇"]
+# Símbolos premium en lugar de frutas
+symbols = ["💎", "👑", "⭐", "💰", "🔥"]
 
 def tirada():
     return random.choices(symbols, k=3)

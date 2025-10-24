@@ -3,14 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Slot Machine</title>
+    <title>Premium Slot Machine - EPIC EDITION</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    <!-- Confeti -->
+    <canvas id="confetti"></canvas>
+    
+    <!-- Selector de Temas -->
+    <div class="theme-selector">
+        <button class="theme-btn" data-theme="gold" title="Gold Theme">💛</button>
+        <button class="theme-btn" data-theme="red" title="Red Casino">❤️</button>
+        <button class="theme-btn" data-theme="blue" title="Blue Neon">💙</button>
+        <button class="theme-btn" data-theme="green" title="Emerald">💚</button>
+        <button id="soundToggle" class="theme-btn" title="Toggle Sound">🔊</button>
+    </div>
+
     <div class="container">
         <div class="header">
             <h1>PREMIUM SLOTS</h1>
-            <p class="subtitle">CASINO EDITION</p>
+            <p class="subtitle">EPIC EDITION</p>
+        </div>
+
+        <!-- Sistema de Rachas -->
+        <div class="streak-container">
+            <div class="streak-item">
+                <span class="streak-label">WIN STREAK</span>
+                <span class="streak-value" id="winStreak">0</span>
+            </div>
+            <div class="streak-item">
+                <span class="streak-label">TOTAL WINS</span>
+                <span class="streak-value" id="totalWins">0</span>
+            </div>
+            <div class="streak-item">
+                <span class="streak-label">BIGGEST WIN</span>
+                <span class="streak-value" id="biggestWin">$0</span>
+            </div>
         </div>
         
         <div class="balance-section">
@@ -31,9 +59,9 @@
                             <div class="slot">{{ symbol }}</div>
                         {% endfor %}
                     {% else %}
-                        <div class="slot spinning">🎰</div>
-                        <div class="slot spinning">🎰</div>
-                        <div class="slot spinning">🎰</div>
+                        <div class="slot spinning">💎</div>
+                        <div class="slot spinning">💎</div>
+                        <div class="slot spinning">💎</div>
                     {% endif %}
                 </div>
             </div>
@@ -54,6 +82,12 @@
                         <span class="currency-symbol">$</span>
                         <input type="number" id="bet" name="bet" min="1" max="{{ balance }}" value="10" required>
                     </div>
+                    <div class="quick-bets">
+                        <button type="button" class="quick-bet" data-amount="5">$5</button>
+                        <button type="button" class="quick-bet" data-amount="10">$10</button>
+                        <button type="button" class="quick-bet" data-amount="25">$25</button>
+                        <button type="button" class="quick-bet" data-amount="50">$50</button>
+                    </div>
                 </div>
                 <button type="submit" class="spin-button" id="spinButton">
                     <span class="button-text">SPIN</span>
@@ -68,47 +102,150 @@
                 <span class="info-value">3x</span>
             </div>
             <div class="info-item">
-                <span class="info-label">STARTING BALANCE</span>
-                <span class="info-value">$100</span>
+                <span class="info-label">STREAK BONUS</span>
+                <span class="info-value">UP TO 10x</span>
             </div>
             <div class="info-item">
-                <span class="info-label">MATCH REQUIRED</span>
-                <span class="info-value">3 SYMBOLS</span>
+                <span class="info-label">MEGA WIN</span>
+                <span class="info-value">5+ STREAK</span>
             </div>
         </div>
     </div>
 
+    <!-- Overlay de victoria -->
     <div id="moneyRain" class="money-rain"></div>
     <div id="winOverlay" class="win-overlay">
         <div class="win-content">
-            <div class="win-multiplier">×10</div>
-            <div class="win-text">JACKPOT!</div>
-            <div class="win-amount"></div>
+            <div class="win-multiplier" id="winMultiplierText">×10</div>
+            <div class="win-text" id="winText">JACKPOT!</div>
+            <div class="win-amount" id="winAmountText"></div>
+        </div>
+    </div>
+
+    <!-- Modal Doblar o Nada -->
+    <div id="doubleOrNothingModal" class="modal">
+        <div class="modal-content">
+            <h2>DOUBLE OR NOTHING</h2>
+            <p>You won <span id="currentWin"></span>!</p>
+            <p>Guess the card color:</p>
+            <div class="card-buttons">
+                <button class="card-btn red-card" data-color="red">♥️ RED</button>
+                <button class="card-btn black-card" data-color="black">♠️ BLACK</button>
+            </div>
+            <button class="skip-btn" id="skipDouble">TAKE THE MONEY</button>
         </div>
     </div>
 
     <script>
+        // Variables globales
+        let soundEnabled = true;
+        let winStreak = 0;
+        let totalWins = 0;
+        let biggestWin = 0;
+        let currentTheme = 'gold';
+
         const form = document.getElementById('betForm');
         const spinButton = document.getElementById('spinButton');
         const slots = document.querySelectorAll('.slot');
         const moneyRain = document.getElementById('moneyRain');
         const winOverlay = document.getElementById('winOverlay');
+        const doubleModal = document.getElementById('doubleOrNothingModal');
+        const confettiCanvas = document.getElementById('confetti');
+        const ctx = confettiCanvas.getContext('2d');
 
-        // Detectar si ganó
+        // Configurar canvas
+        confettiCanvas.width = window.innerWidth;
+        confettiCanvas.height = window.innerHeight;
+        window.addEventListener('resize', () => {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+        });
+
+        // Sonidos
+        const sounds = {
+            spin: () => playTone(200, 0.1, 'sine'),
+            win: () => playTone(800, 0.3, 'sine'),
+            bigWin: () => {
+                playTone(400, 0.2, 'sine');
+                setTimeout(() => playTone(600, 0.2, 'sine'), 100);
+                setTimeout(() => playTone(800, 0.3, 'sine'), 200);
+            },
+            coin: () => playTone(1200, 0.05, 'sine'),
+            lose: () => playTone(150, 0.2, 'sawtooth')
+        };
+
+        function playTone(frequency, duration, type = 'sine') {
+            if (!soundEnabled) return;
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        // Toggle sonido
+        document.getElementById('soundToggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            this.textContent = soundEnabled ? '🔊' : '🔇';
+        });
+
+        // Cambio de tema
+        document.querySelectorAll('.theme-btn[data-theme]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                currentTheme = this.dataset.theme;
+                document.body.className = 'theme-' + currentTheme;
+                document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Apuestas rápidas
+        document.querySelectorAll('.quick-bet').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.getElementById('bet').value = this.dataset.amount;
+            });
+        });
+
+        // Detectar victoria desde el servidor
         const isWin = "{{ message }}".toLowerCase().includes('won');
         const betAmount = parseInt("{{ request.form.get('bet', 0) }}") || 0;
 
         if (isWin && betAmount > 0) {
+            const winAmount = betAmount * 3;
+            winStreak++;
+            totalWins++;
+            if (winAmount > biggestWin) biggestWin = winAmount;
+            updateStats();
+            
             setTimeout(() => {
-                triggerWinCelebration(betAmount * 3);
+                triggerWinCelebration(winAmount, winStreak);
             }, 500);
+        } else if (!isWin && betAmount > 0) {
+            winStreak = 0;
+            updateStats();
+            sounds.lose();
+        }
+
+        function updateStats() {
+            document.getElementById('winStreak').textContent = winStreak;
+            document.getElementById('totalWins').textContent = totalWins;
+            document.getElementById('biggestWin').textContent = '$' + biggestWin;
         }
 
         form.addEventListener('submit', function(e) {
             spinButton.disabled = true;
             spinButton.style.opacity = '0.6';
+            sounds.spin();
             
-            // Animación ultra rápida de spinning
             slots.forEach((slot, index) => {
                 slot.classList.add('ultra-spinning');
                 setTimeout(() => {
@@ -122,21 +259,37 @@
             }, 800);
         });
 
-        function triggerWinCelebration(winAmount) {
-            // Mostrar overlay épico
-            const winAmountEl = winOverlay.querySelector('.win-amount');
-            winAmountEl.textContent = `+${winAmount}`;
+        function triggerWinCelebration(winAmount, streak) {
+            let multiplier = '×3';
+            let winType = 'WIN!';
+            
+            if (streak >= 5) {
+                multiplier = '×10';
+                winType = 'MEGA WIN!!!';
+                sounds.bigWin();
+            } else if (streak >= 3) {
+                multiplier = '×5';
+                winType = 'BIG WIN!!';
+                sounds.bigWin();
+            } else {
+                sounds.win();
+            }
+
+            document.getElementById('winMultiplierText').textContent = multiplier;
+            document.getElementById('winText').textContent = winType;
+            document.getElementById('winAmountText').textContent = `+$${winAmount}`;
+            
             winOverlay.classList.add('active');
-
-            // Crear lluvia de dinero masiva
             createMoneyRain();
+            createConfetti();
 
-            // Ocultar overlay después de 4 segundos
             setTimeout(() => {
                 winOverlay.classList.remove('active');
+                if (streak >= 2) {
+                    showDoubleOrNothing(winAmount);
+                }
             }, 4000);
 
-            // Detener lluvia después de 6 segundos
             setTimeout(() => {
                 moneyRain.innerHTML = '';
             }, 6000);
@@ -144,7 +297,7 @@
 
         function createMoneyRain() {
             const moneySymbols = ['💵', '💴', '💶', '💷', '💰', '🪙', '💸'];
-            const rainCount = 80; // Cantidad masiva de dinero
+            const rainCount = 80;
 
             for (let i = 0; i < rainCount; i++) {
                 setTimeout(() => {
@@ -153,22 +306,91 @@
                     money.textContent = moneySymbols[Math.floor(Math.random() * moneySymbols.length)];
                     money.style.left = Math.random() * 100 + '%';
                     money.style.animationDuration = (Math.random() * 2 + 2) + 's';
-                    money.style.animationDelay = '0s';
                     money.style.fontSize = (Math.random() * 30 + 30) + 'px';
                     
-                    // Rotación aleatoria
                     const rotation = Math.random() * 360;
                     money.style.setProperty('--rotation', rotation + 'deg');
                     
                     moneyRain.appendChild(money);
 
-                    // Eliminar después de la animación
-                    setTimeout(() => {
-                        money.remove();
-                    }, 4000);
-                }, i * 50); // Intervalo para que caigan progresivamente
+                    setTimeout(() => money.remove(), 4000);
+                }, i * 50);
             }
         }
+
+        // Sistema de confeti
+        let confettiParticles = [];
+
+        function createConfetti() {
+            confettiParticles = [];
+            const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ff9ff3'];
+            
+            for (let i = 0; i < 150; i++) {
+                confettiParticles.push({
+                    x: Math.random() * confettiCanvas.width,
+                    y: -20,
+                    size: Math.random() * 8 + 4,
+                    speedY: Math.random() * 3 + 2,
+                    speedX: Math.random() * 4 - 2,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * 360,
+                    rotationSpeed: Math.random() * 10 - 5
+                });
+            }
+            
+            animateConfetti();
+        }
+
+        function animateConfetti() {
+            ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            
+            confettiParticles.forEach((p, index) => {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation * Math.PI / 180);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                ctx.restore();
+                
+                p.y += p.speedY;
+                p.x += p.speedX;
+                p.rotation += p.rotationSpeed;
+                
+                if (p.y > confettiCanvas.height) {
+                    confettiParticles.splice(index, 1);
+                }
+            });
+            
+            if (confettiParticles.length > 0) {
+                requestAnimationFrame(animateConfetti);
+            }
+        }
+
+        // Sistema Doblar o Nada
+        function showDoubleOrNothing(amount) {
+            document.getElementById('currentWin').textContent = '$' + amount;
+            doubleModal.style.display = 'flex';
+        }
+
+        document.querySelectorAll('.card-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const choice = this.dataset.color;
+                const result = Math.random() > 0.5 ? 'red' : 'black';
+                
+                if (choice === result) {
+                    alert('YOU WON! Double your money! 🎉');
+                    sounds.bigWin();
+                } else {
+                    alert('YOU LOST! Better luck next time! 😢');
+                    sounds.lose();
+                }
+                doubleModal.style.display = 'none';
+            });
+        });
+
+        document.getElementById('skipDouble').addEventListener('click', () => {
+            doubleModal.style.display = 'none';
+        });
     </script>
 </body>
 </html>
