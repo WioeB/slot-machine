@@ -16,7 +16,7 @@ Un juego de tragaperras profesional con efectos épicos de victoria.
 
 1. Clona el repositorio:
 ```bash
-git clone https://github.com/TU_USUARIO/slot-machine.git
+git clone https://github.com/WioeB/slot-machine.git
 cd slot-machine
 ```
 
