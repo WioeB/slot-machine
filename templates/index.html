@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Premium Slot Machine - EPIC EDITION</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        // Aplicar tema guardado inmediatamente para evitar flash
+        (function() {
+            const savedTheme = localStorage.getItem('selectedTheme') || 'gold';
+            document.documentElement.className = 'theme-' + savedTheme;
+            document.body.className = 'theme-' + savedTheme;
+        })();
+    </script>
 </head>
 <body>
     <!-- Confeti -->
@@ -110,6 +118,56 @@
                 <span class="info-value">5+ STREAK</span>
             </div>
         </div>
+
+        <!-- Top 5 Leaderboard -->
+        <div class="leaderboard-section">
+            <div class="leaderboard-header">
+                <h2 class="leaderboard-title">🏆 TOP WINNERS</h2>
+                <p class="leaderboard-subtitle">LEGENDARY PLAYERS</p>
+            </div>
+            <div class="leaderboard-list">
+                <div class="leaderboard-item rank-1">
+                    <div class="rank-badge">1</div>
+                    <div class="player-info">
+                        <span class="player-name">Wio Gold</span>
+                        <span class="player-amount">$12,450</span>
+                    </div>
+                    <div class="crown-icon">👑</div>
+                </div>
+                <div class="leaderboard-item rank-2">
+                    <div class="rank-badge">2</div>
+                    <div class="player-info">
+                        <span class="player-name">Hola Queen</span>
+                        <span class="player-amount">$9,820</span>
+                    </div>
+                    <div class="crown-icon">💎</div>
+                </div>
+                <div class="leaderboard-item rank-3">
+                    <div class="rank-badge">3</div>
+                    <div class="player-info">
+                        <span class="player-name">Messi Gold</span>
+                        <span class="player-amount">$7,650</span>
+                    </div>
+                    <div class="crown-icon">⭐</div>
+                </div>
+                <div class="leaderboard-item rank-4">
+                    <div class="rank-badge">4</div>
+                    <div class="player-info">
+                        <span class="player-name">CR7 Master</span>
+                        <span class="player-amount">$5,340</span>
+                    </div>
+                    <div class="crown-icon">🔥</div>
+                </div>
+                <div class="leaderboard-item rank-5">
+                    <div class="rank-badge">5</div>
+                    <div class="player-info">
+                        <span class="player-name">Cash King</span>
+                        <span class="player-amount">$4,120</span>
+                    </div>
+                    <div class="crown-icon">💰</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Overlay de victoria -->
@@ -136,13 +194,24 @@
         </div>
     </div>
 
+    
     <script>
         // Variables globales
         let soundEnabled = true;
         let winStreak = 0;
         let totalWins = 0;
         let biggestWin = 0;
-        let currentTheme = 'gold';
+        let currentTheme = localStorage.getItem('selectedTheme') || 'gold';
+
+        // Aplicar tema guardado al cargar la página
+        document.body.className = 'theme-' + currentTheme;
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            if (btn.dataset.theme === currentTheme) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
 
         const form = document.getElementById('betForm');
         const spinButton = document.getElementById('spinButton');
@@ -205,6 +274,8 @@
                 document.body.className = 'theme-' + currentTheme;
                 document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
+                // Guardar tema en localStorage
+                localStorage.setItem('selectedTheme', currentTheme);
             });
         });
 

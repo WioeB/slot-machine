@@ -8,6 +8,8 @@ Un juego de tragaperras profesional con efectos épicos de victoria.
 - Animaciones ultra rápidas
 - Efectos épicos al ganar (lluvia de dinero, multiplicador x10)
 - Sistema de compra de fondos
+- Top 5 Leaderboard de mejores ganadores
+- Personalización de temas (Gold, Red, Blue, Green) con persistencia
 - Completamente responsive
 
 ## 📦 Instalación

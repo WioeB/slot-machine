@@ -192,7 +192,7 @@ body::before {
     padding: 25px 30px;
     border-radius: 15px;
     border: 1px solid var(--primary);
-    border-opacity: 0.2;
+    border: 0.2;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -240,7 +240,7 @@ body::before {
     border-radius: 20px;
     margin-bottom: 30px;
     border: 2px solid var(--primary);
-    border-opacity: 0.3;
+    border: 0.3;
     box-shadow: 
         0 20px 60px rgba(0, 0, 0, 0.8),
         inset 0 0 30px var(--primary);
@@ -776,6 +776,161 @@ body::before {
     box-shadow: 0 6px 25px rgba(61, 107, 31, 0.6);
 }
 
+/* LEADERBOARD */
+.leaderboard-section {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leaderboard-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.leaderboard-title {
+    font-size: 1.8em;
+    font-weight: 900;
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 50%, var(--primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+    text-shadow: 0 0 20px var(--primary);
+}
+
+.leaderboard-subtitle {
+    font-size: 0.7em;
+    letter-spacing: 3px;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 600;
+}
+
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.leaderboard-item {
+    background: linear-gradient(145deg, #1a1f3a, #0d1021);
+    padding: 18px 25px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.leaderboard-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--primary);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.leaderboard-item:hover {
+    transform: translateX(5px);
+    border-color: var(--primary);
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2);
+}
+
+.leaderboard-item:hover::before {
+    opacity: 1;
+}
+
+.leaderboard-item.rank-1 {
+    border-color: rgba(255, 215, 0, 0.4);
+    background: linear-gradient(145deg, #2a1f3a, #1d1021);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.leaderboard-item.rank-1 .rank-badge {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #000;
+    box-shadow: 0 0 20px var(--primary);
+}
+
+.leaderboard-item.rank-2 {
+    border-color: rgba(192, 192, 192, 0.3);
+    background: linear-gradient(145deg, #252530, #151520);
+}
+
+.leaderboard-item.rank-2 .rank-badge {
+    background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+    color: #000;
+}
+
+.leaderboard-item.rank-3 {
+    border-color: rgba(205, 127, 50, 0.3);
+    background: linear-gradient(145deg, #2a2520, #1a1510);
+}
+
+.leaderboard-item.rank-3 .rank-badge {
+    background: linear-gradient(135deg, #cd7f32, #e8a87c);
+    color: #000;
+}
+
+.rank-badge {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3em;
+    font-weight: 900;
+    background: linear-gradient(145deg, #2a2a3a, #1a1a2a);
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    flex-shrink: 0;
+    box-shadow: 0 0 10px var(--primary);
+}
+
+.player-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.player-name {
+    font-size: 1.1em;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 1px;
+}
+
+.player-amount {
+    font-size: 1.3em;
+    font-weight: 900;
+    color: var(--primary);
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px var(--primary);
+}
+
+.crown-icon {
+    font-size: 2em;
+    opacity: 0.6;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 0 5px var(--primary));
+}
+
+.leaderboard-item:hover .crown-icon {
+    opacity: 1;
+    transform: scale(1.2) rotate(5deg);
+    filter: drop-shadow(0 0 15px var(--primary));
+}
+
 @media (max-width: 768px) {
     .theme-selector {
         top: 10px;
@@ -848,6 +1003,34 @@ body::before {
 
     .card-buttons {
         grid-template-columns: 1fr;
+    }
+
+    .leaderboard-title {
+        font-size: 1.4em;
+        letter-spacing: 2px;
+    }
+
+    .leaderboard-item {
+        padding: 15px 18px;
+        gap: 15px;
+    }
+
+    .rank-badge {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1em;
+    }
+
+    .player-name {
+        font-size: 0.95em;
+    }
+
+    .player-amount {
+        font-size: 1.1em;
+    }
+
+    .crown-icon {
+        font-size: 1.5em;
     }
 }
     
